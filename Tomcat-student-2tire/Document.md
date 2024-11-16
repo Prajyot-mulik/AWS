@@ -1,6 +1,3 @@
-Documentation for Tomcat & MariaDB Setup with AWS RDS Integration
-This document provides a step-by-step guide to set up Apache Tomcat 9.0.97, MariaDB 10.5, and integrate it with an AWS RDS database for a student management application.
-
 RDS Documentation - Step-by-Step Notes:
 Create an RDS Database:
 
@@ -14,6 +11,7 @@ Attach inbound rules for the following ports in the security group:
 Port 3306 (MySQL/MariaDB)
 Port 8080 (Apache Tomcat)
 Connect to the Instance:
+----------------------------------------------------------------------------------------------------
 
 SSH into the EC2 instance. Run the following command to log in as root user:
 bash
@@ -39,7 +37,7 @@ Use MobaXterm to connect via SSH. Input the public IP and PEM key:
 Public IP: 13.201.85.99
 PEM Key: GAURAV.PEM
 Connect and Check Apache File Location:
-
+=-------------------------------------------------------------------------------------------------
 Run the following commands:
 bash
 Copy code
@@ -125,8 +123,3 @@ In your browser, access the application using the EC2 instance's public IP:
 bash
 Copy code
 http://13.201.85.99:8080/student/
-
-
-
-
-
