@@ -1,125 +1,122 @@
-RDS Documentation - Step-by-Step Notes:
-Create an RDS Database:
+############ 2tier Application using Apache Tomcat and Aws mariadb RDS############
 
-Log into AWS and create an RDS instance. Choose the database engine (e.g., MySQL, MariaDB) and configure settings as needed.
-Create an Instance:
+###Architecture:
 
-Set up a new EC2 instance where the Apache Tomcat server will be installed and configured.
-Attach Security Group Rules:
+![alt text](arch.png)
 
-Attach inbound rules for the following ports in the security group:
-Port 3306 (MySQL/MariaDB)
-Port 8080 (Apache Tomcat)
-Connect to the Instance:
-----------------------------------------------------------------------------------------------------
+Step 1: Create database using RDS.
 
-SSH into the EC2 instance. Run the following command to log in as root user:
-bash
-Copy code
-sudo -i
-Download Apache Tomcat:
+![alt text](database.png)
 
-Use curl to download Apache Tomcat:
-bash
-Copy code
-curl -O https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.91/bin/apache-tomcat-9.0.91.tar.gz
-Check the downloaded file:
-bash
-Copy code
-LS
-Unzip the file and move it to the /opt/ directory:
-bash
-Copy code
-mv apache-tomcat-9.0.91 /opt/
-Login via MobaXterm:
+Step 2: Create and launch instance to host tomcat server.
 
-Use MobaXterm to connect via SSH. Input the public IP and PEM key:
-Public IP: 13.201.85.99
-PEM Key: GAURAV.PEM
-Connect and Check Apache File Location:
-=-------------------------------------------------------------------------------------------------
-Run the following commands:
-bash
-Copy code
-sudo -i
-cd /opt
-ls
-Upload Connector JAR and WAR Files:
+![alt text](tomcatserver.png)
 
-Upload mysql-connector.jar and student.war files to your EC2 instance.
-Move them into the correct directories:
-bash
-Copy code
-mv mysql-connector.jar /opt/apache-tomcat-9.0.91/lib/
-mv student.war /opt/apache-tomcat-9.0.91/webapps/
-Check Tomcat Files and Install Java:
+     -> Add following security groups:
 
-Navigate to the Tomcat directory and verify the files:
-bash
-Copy code
-cd /opt/apache-tomcat-9.0.91/
-ls
-cd bin/
-ls
-cd conf/
-ls
-Search for the latest version of Java and install it:
-bash
-Copy code
-yum search java
-yum install amazon-corretto-11 -y
-Create context.xml File:
+![alt text](securitygroups.jpeg)
 
-Use the vim editor to create and configure the context.xml file:
-bash
-Copy code
-vim context.xml
-Add necessary configuration details, then exit insert mode using :wq.
-Start Tomcat Server:
+Step 3:Connect to instance using moboxterm teminal.
 
-Start the Apache Tomcat server using the following command:
-bash
-Copy code
-bash catalina.sh start
-Install MariaDB:
+     -> switch to root user.
 
-Search for MariaDB and install it:
-bash
-Copy code
-yum search maria
-yum install mariadb105.x86_64 -y
-Connect to the RDS Database:
+     -> upload the student.war (source code) and mysql-connector.jar (database connector) in moboxterm. (file will upload in local user home directory.)
 
-Use the following command to connect to your RDS instance:
-bash
-Copy code
-mysql -h database-1.c3yqqwyeoe4f.ap-south-1.rds.amazonaws.com -u admin -pAdmin123
-Check Databases:
+Step 4: Get the third party application i.e. tomcat 9 from internet.
 
-Check if the database is accessible:
-bash
-Copy code
-SHOW DATABASES;
-Create studentapp Database:
+     -> Copy tar link from tomcat 9 website.
 
-Create the studentapp database and a table for storing student information:
-bash
-Copy code
-create database studentapp;
-use studentapp;
-CREATE TABLE if not exists students (
-  student_id INT NOT NULL AUTO_INCREMENT,
-  student_age VARCHAR(3) NOT NULL,
-  student_name VARCHAR(100) NOT NULL,
-  student_addr VARCHAR(100) NOT NULL,
-  student_qual VARCHAR(20) NOT NULL,
-  student_percent VARCHAR(10) NOT NULL,
-  student_year_passed VARCHAR(10) NOT NULL,
-  PRIMARY KEY (student_id)
+![alt text](tomcatlink.jpeg)
+
+     -> download third party app using curl
+        curl -O https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.91/bin/apache-tomcat-9.0.91.tar.gz
+
+     -> move the zip file to /opt/ directory.
+       mv <source- ~/zipfile> <destination-/opt/>
+
+     -> unzip file using tar command
+       tar -xvf zipfile
+
+Step 5: Add .jar and .war files i.e. artifacts to respective directory.
+
+     -> Add .war file to webapps dirctory.
+
+     -> Add .jar file to lib directory.
+
+Step 6: Install Java and Mariadb Packages in tomcat instance
+
+      -> Search and install Java
+         yum search java
+         yum search mariadb
+
+![alt text](javapackage.png)
+
+![alt text](mariadbpackage.png)
+
+         yum install java-11-amazon-corretto.x86_64
+         yum install mariadb105.x86_64
+
+Step 7: Start the tomcat server to see if Front end is working.
+
+     -> Go to  bin directory of apache tomcat & start  catalina.sh using bash command.
+     i.e   bash catalina.sh start
+
+     -> if tomcat start is seen on terminal then copy following link see if front end working.
+
+     public ip/DNS:8080/appname(student)
+
+     -> Now frontend is working but we're unable to add entry to database, so next step is to connect our app to database.
+
+Step 8: Edit the context.xml file in conf directory with following text.
+
+     -> edit your RDS username, password, db-endpoint, databasename in resource tag  and between context tag in context.xml
+
+     vim context.xml(line no 21)
+    		<Resource name="jdbc/TestDB" auth="Container" type="javax.sql.DataSource"
+               maxTotal="100" maxIdle="30" maxWaitMillis="10000"
+               username="USERNAME" password="PASSWORD" driverClassName="com.mysql.jdbc.Driver"
+               url="jdbc:mysql://DB-ENDPOINT:3306/DATABASE"/>
+
+![alt text](context_xml.png)
+
+Step 9: login to database and create database and Add schema.
+
+     -> login using following command:
+       mysql -h db-endpoint -u user -ppassword
+
+     -> to create database use:
+        create database db_name;
+
+     -> to use database:
+        use db_name;
+
+     -> Add following query to create table schema:
+
+        CREATE TABLE if not exists students(student_id INT NOT NULL AUTO_INCREMENT,
+    student_name VARCHAR(100) NOT NULL,
+    student_addr VARCHAR(100) NOT NULL,
+    student_age VARCHAR(3) NOT NULL,
+    student_qual VARCHAR(20) NOT NULL,
+    student_percent VARCHAR(10) NOT NULL,
+    student_year_passed VARCHAR(10) NOT NULL,
+    PRIMARY KEY (student_id)
+
 );
-Access the Web Application:
 
-In your browser, access the application using the EC2 instance's public IP:
-bash
-Copy code
-http://13.201.85.99:8080/student/
+    -> to see databases and tables use:
+
+![alt text](db&tables.png)
+
+Step 10: Reboot the instance and start the tomcat server using catlina.
+
+Step 11: Copy tomcat instance url and add the data to it and save. link would be like this:
+
+     -> ec2-13-233-215-125.ap-south-1.compute.amazonaws.com:8080/student/
+
+     -> output:
+
+![alt text](studentpage.png)
+
+     -> Table entries:
+
+![alt text](dbentry.png)
